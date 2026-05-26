@@ -1,0 +1,1182 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<title>Ied Kaart Generator</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="https://unpkg.com/@csstools/normalize.css" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Inter:wght@300;400;500;600&family=Raleway:wght@400;500;700&family=Mirza:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* pure white — quiet luxury */
+    --bg-0: #ffffff;
+    --bg-1: #fafaf7;
+    --bg-2: #f3f1ea;
+    --surface: rgba(255,255,255,0.7);
+    --surface-strong: rgba(255,255,255,0.9);
+    --hairline: rgba(40,32,18,0.08);
+    --hairline-strong: rgba(40,32,18,0.14);
+
+    /* warm metallic gold */
+    --gold: #a07d3a;
+    --gold-soft: #c9a86a;
+    --gold-deep: #6d5320;
+    --gold-glow: rgba(160,125,58,0.18);
+
+    /* text */
+    --fg: #1c1a14;
+    --fg-soft: #4d4636;
+    --fg-mute: #7a7261;
+    --fg-faint: #b0a892;
+
+    /* the in-design name overlay color (matches "ied mubarak" on template) */
+    --name-color: #34414f;
+
+    --font-display: 'Fraunces', 'Times New Roman', serif;
+    --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
+    --font-name: 'Raleway', sans-serif;
+    --font-name-ar: 'Mirza', serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    background: var(--bg-0);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* very subtle ambient lighting */
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::before {
+    background:
+      radial-gradient(ellipse 60% 50% at 88% -10%, rgba(201,168,106,0.10), transparent 65%),
+      radial-gradient(ellipse 55% 45% at 8% 105%, rgba(196,165,118,0.06), transparent 60%);
+  }
+  body::after { display: none; }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 56px 40px 160px;
+  }
+
+  /* ───────── header ───────── */
+  header.brand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 96px;
+  }
+  .mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--fg-soft);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .mark .glyph {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    background: linear-gradient(135deg, rgba(201,168,106,0.30), rgba(201,168,106,0.06));
+    border: 1px solid rgba(160,125,58,0.36);
+    color: var(--gold-deep);
+    box-shadow: 0 0 22px rgba(201,168,106,0.18), inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .mark .glyph .seal {
+    width: 78%; height: 78%;
+    background: var(--gold-deep);
+    -webkit-mask: url("seal.png") center / contain no-repeat;
+            mask: url("seal.png") center / contain no-repeat;
+    -webkit-mask-mode: luminance;
+            mask-mode: luminance;
+  }
+  .mark .glyph svg { width: 14px; height: 14px; }
+  .mark .sep {
+    width: 1px; height: 14px; background: var(--hairline-strong); margin: 0 4px;
+  }
+  .mark .nm {
+    color: var(--fg);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    font-size: 14px;
+  }
+  .header-meta {
+    display: flex; align-items: center; gap: 10px;
+    color: var(--fg-mute);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .header-meta .live {
+    width: 7px; height: 7px; border-radius: 999px;
+    background: var(--gold);
+    box-shadow: 0 0 12px var(--gold-glow);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.55; transform: scale(0.85); }
+  }
+
+  /* ───────── hero ───────── */
+  .hero-block {
+    margin-bottom: 72px;
+    max-width: 920px;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 24px;
+    font-weight: 500;
+  }
+  .eyebrow::before {
+    content: ""; width: 28px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold));
+  }
+  h1.hero {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: clamp(44px, 6.6vw, 84px);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    margin: 0;
+    padding-top: 0.25em;
+    color: var(--fg);
+    font-style: normal;
+    overflow: visible;
+  }
+  h1.hero em {
+    font-style: italic;
+    font-weight: 300;
+    display: inline-block;
+    padding: 0 0.18em 0 0.04em;
+    background: linear-gradient(135deg, var(--gold), var(--gold-deep));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ───────── layout ───────── */
+  .grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+    gap: 64px;
+    align-items: start;
+  }
+  @media (max-width: 920px) {
+    .grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+
+  /* ───────── preview card (floating glass frame) ───────── */
+  .preview-shell {
+    position: relative;
+    padding: 14px;
+    border-radius: 24px;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55));
+    border: 1px solid var(--hairline);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    box-shadow:
+      0 30px 70px -20px rgba(60,45,20,0.18),
+      0 8px 24px -8px rgba(60,45,20,0.10),
+      0 1px 0 rgba(255,255,255,0.9) inset;
+  }
+  .preview-shell::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 25px;
+    padding: 1px;
+    background: linear-gradient(140deg, rgba(160,125,58,0.55), transparent 35%, transparent 65%, rgba(160,125,58,0.22));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .preview-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #ece6d6;
+    container-type: inline-size;
+  }
+  .preview-wrap img.tpl {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .name-overlay {
+    position: absolute;
+    left: 50%;
+    top: 89.5%;
+    transform: translate(-50%, -50%);
+    color: var(--name-color);
+    text-align: center;
+    white-space: nowrap;
+    pointer-events: none;
+    width: max-content;
+    max-width: 86%;
+    transition: opacity 200ms ease;
+  }
+  .name-overlay.latin {
+    font-family: var(--font-name);
+    font-weight: 700;
+    font-size: 4.4cqw;
+    letter-spacing: -0.005em;
+  }
+  .name-overlay.arabic {
+    font-family: var(--font-name-ar);
+    font-weight: 600;
+    font-size: 5.6cqw;
+    direction: rtl;
+    line-height: 1;
+  }
+
+  /* corner crosshairs on preview — premium camera framing */
+  .crosshair {
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: var(--gold);
+    opacity: 0.7;
+    pointer-events: none;
+  }
+  .crosshair.tl { top: 18px; left: 18px; border-top: 1px solid; border-left: 1px solid; }
+  .crosshair.tr { top: 18px; right: 18px; border-top: 1px solid; border-right: 1px solid; }
+  .crosshair.bl { bottom: 18px; left: 18px; border-bottom: 1px solid; border-left: 1px solid; }
+  .crosshair.br { bottom: 18px; right: 18px; border-bottom: 1px solid; border-right: 1px solid; }
+
+  /* ───────── quote slideshow under preview ───────── */
+  .quotes {
+    position: relative;
+    margin-top: 32px;
+    padding: 36px 40px 32px;
+    border-radius: 18px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55));
+    border: 1px solid var(--hairline);
+    box-shadow: 0 18px 40px -20px rgba(60,45,20,0.14), 0 1px 0 rgba(255,255,255,0.9) inset;
+    overflow: hidden;
+  }
+  .quotes::before {
+    content: "";
+    position: absolute; left: 40px; right: 40px; top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(160,125,58,0.55), transparent);
+  }
+  .quote-mark {
+    position: absolute;
+    top: 18px; left: 24px;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 300;
+    font-size: 64px;
+    line-height: 1;
+    color: var(--gold-soft);
+    opacity: 0.45;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .quote-stack {
+    position: relative;
+    display: grid;
+  }
+  .quote-stack > .quote {
+    grid-column: 1; grid-row: 1;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 700ms ease, transform 700ms cubic-bezier(0.2,0,0,1);
+    pointer-events: none;
+  }
+  .quote-stack > .quote.is-active {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .quote-ar {
+    font-family: var(--font-name-ar);
+    font-weight: 500;
+    font-size: clamp(22px, 2.0vw, 28px);
+    line-height: 1.85;
+    direction: rtl;
+    text-align: right;
+    color: var(--fg);
+    margin: 0 0 18px;
+  }
+  .quote-nl {
+    font-family: var(--font-name);
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--fg-soft);
+    margin: 0 0 14px;
+  }
+  .quote-source {
+    font-family: var(--font-name);
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+    margin: 0;
+  }
+  .quote-dots {
+    margin-top: 22px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .quote-dot {
+    appearance: none;
+    width: 22px; height: 6px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(40,32,18,0.14);
+    cursor: pointer;
+    transition: background 300ms ease, width 300ms ease;
+    padding: 0;
+  }
+  .quote-dot.is-active {
+    background: linear-gradient(90deg, var(--gold), var(--gold-deep));
+    width: 34px;
+  }
+  .quote-dot:hover:not(.is-active) { background: rgba(40,32,18,0.28); }
+
+  /* ───────── side panel ───────── */
+  .panel {
+    position: sticky;
+    top: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 36px 32px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(255,255,255,0.66));
+    border: 1px solid var(--hairline);
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    box-shadow:
+      0 30px 60px -20px rgba(60,45,20,0.18),
+      0 8px 24px -8px rgba(60,45,20,0.08),
+      0 1px 0 rgba(255,255,255,0.9) inset;
+  }
+  .panel-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .panel-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 30px;
+    letter-spacing: -0.015em;
+    line-height: 1;
+    margin: 0;
+    color: var(--fg);
+  }
+  .panel-title em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--gold);
+  }
+  .panel-step {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--fg-mute);
+  }
+
+  /* template picker */
+  .tpl-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .tpl-opt {
+    position: relative;
+    cursor: pointer;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid var(--hairline-strong);
+    background: rgba(255,255,255,0.5);
+    aspect-ratio: 1 / 1;
+    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+  }
+  .tpl-opt img {
+    width: 100%; height: 100%;
+    display: block; object-fit: cover;
+    user-select: none; -webkit-user-drag: none;
+    transition: transform 400ms ease;
+  }
+  .tpl-opt:hover { border-color: rgba(40,32,18,0.28); }
+  .tpl-opt:hover img { transform: scale(1.03); }
+  .tpl-opt input { position: absolute; opacity: 0; pointer-events: none; }
+  .tpl-opt .check {
+    position: absolute;
+    top: 6px; right: 6px;
+    width: 22px; height: 22px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.85);
+    border: 1px solid var(--hairline-strong);
+    opacity: 0;
+    transform: scale(0.85);
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+  .tpl-opt .check svg { width: 12px; height: 12px; color: var(--gold-deep); }
+  .tpl-opt.is-selected {
+    border-color: var(--gold);
+    box-shadow:
+      0 0 0 3px rgba(160,125,58,0.16),
+      0 10px 24px -10px rgba(140,111,48,0.35);
+  }
+  .tpl-opt.is-selected .check { opacity: 1; transform: scale(1); }
+
+  /* form */
+  label.field {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  label.field .lbl {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--fg-soft);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .input-wrap {
+    position: relative;
+  }
+  input.name {
+    appearance: none;
+    width: 100%;
+    border: 1px solid var(--hairline-strong);
+    background: rgba(255,255,255,0.65);
+    color: var(--fg);
+    border-radius: 12px;
+    padding: 16px 18px;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  }
+  input.name::placeholder { color: var(--fg-faint); font-weight: 300; }
+  input.name:hover { border-color: rgba(40,32,18,0.22); }
+  input.name:focus {
+    outline: none;
+    border-color: var(--gold);
+    background: #fff;
+    box-shadow:
+      0 0 0 4px rgba(160,125,58,0.12),
+      0 0 30px -5px rgba(160,125,58,0.20);
+  }
+
+  /* actions */
+  .actions { display: flex; flex-direction: column; gap: 12px; }
+  .btn {
+    appearance: none;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 15px 20px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 220ms cubic-bezier(0.2, 0, 0, 1);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn svg { transition: transform 220ms ease; }
+  .btn-primary {
+    background: linear-gradient(180deg, #d4b478 0%, #b08c46 55%, #8c6f30 100%);
+    color: #1a1308;
+    box-shadow:
+      0 12px 28px -10px rgba(140,111,48,0.55),
+      0 0 0 1px rgba(255,255,255,0.28) inset,
+      0 -1px 0 rgba(60,40,10,0.2) inset;
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 18px 36px -10px rgba(140,111,48,0.6),
+      0 0 0 1px rgba(255,255,255,0.32) inset,
+      0 -1px 0 rgba(60,40,10,0.2) inset;
+  }
+  .btn-primary:hover svg { transform: translateY(2px); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    background: rgba(255,255,255,0.5);
+    border-color: var(--hairline-strong);
+    color: var(--fg);
+  }
+  .btn-ghost:hover {
+    background: #fff;
+    border-color: rgba(40,32,18,0.28);
+  }
+  .btn-ghost.copied {
+    background: rgba(160,125,58,0.10);
+    border-color: var(--gold);
+    color: var(--gold-deep);
+  }
+
+  /* text card */
+  .txt-section {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .txt-section .lbl {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--fg-soft);
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  .txt-card {
+    position: relative;
+    background: rgba(255,255,255,0.55);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 22px 24px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--fg-soft);
+    white-space: pre-wrap;
+  }
+  .txt-card .ar { font-family: 'Mirza', serif; font-size: 19px; direction: rtl; display: block; margin: 8px 0; color: var(--fg); }
+  .txt-card .nm { font-weight: 600; display: block; margin-top: 12px; color: var(--gold-deep); letter-spacing: 0.01em; }
+
+  /* offscreen canvas used for export */
+  canvas.export { display: none; }
+
+  /* ───────── success modal ───────── */
+  .modal-root {
+    position: fixed; inset: 0;
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .modal-root.is-open { display: flex; }
+  .modal-veil {
+    position: absolute; inset: 0;
+    background: rgba(28,22,8,0.32);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    animation: veil-in 240ms cubic-bezier(0.2,0,0,1) forwards;
+  }
+  @keyframes veil-in { to { opacity: 1; } }
+  .modal {
+    position: relative;
+    width: min(520px, 100%);
+    background: #fff;
+    border: 1px solid var(--hairline);
+    border-radius: 22px;
+    padding: 40px 36px 32px;
+    box-shadow:
+      0 40px 80px -20px rgba(60,45,20,0.35),
+      0 12px 30px -10px rgba(60,45,20,0.18),
+      0 1px 0 rgba(255,255,255,1) inset;
+    transform: translateY(10px) scale(0.98);
+    opacity: 0;
+    animation: modal-in 360ms cubic-bezier(0.2,0,0,1) 80ms forwards;
+  }
+  @keyframes modal-in { to { transform: translateY(0) scale(1); opacity: 1; } }
+  .modal::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: 23px;
+    padding: 1px;
+    background: linear-gradient(140deg, rgba(160,125,58,0.45), transparent 50%, rgba(160,125,58,0.18));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+  .modal-icon {
+    width: 56px; height: 56px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #fbf3e0, #f2e3bc);
+    border: 1px solid rgba(160,125,58,0.35);
+    color: var(--gold-deep);
+    margin-bottom: 22px;
+    box-shadow: 0 8px 24px -6px rgba(160,125,58,0.35), inset 0 1px 0 rgba(255,255,255,0.8);
+  }
+  .modal-icon svg { width: 26px; height: 26px; }
+  .modal-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold-deep);
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 32px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin: 0 0 10px;
+    color: var(--fg);
+  }
+  .modal-sub {
+    color: var(--fg-soft);
+    font-size: 15px;
+    line-height: 1.55;
+    margin: 0 0 24px;
+  }
+  .modal-sub b { color: var(--fg); font-weight: 600; }
+  .modal-txt {
+    background: #faf7ee;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    padding: 18px 20px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--fg-soft);
+    white-space: pre-wrap;
+    margin: 0 0 20px;
+  }
+  .modal-txt .ar { font-family: 'Mirza', serif; font-size: 18px; direction: rtl; display: block; margin: 6px 0; color: var(--fg); }
+  .modal-txt .nm { font-weight: 600; display: block; margin-top: 10px; color: var(--gold-deep); letter-spacing: 0.01em; }
+  .modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media (max-width: 460px) { .modal-actions { grid-template-columns: 1fr; } }
+  .modal-close {
+    position: absolute;
+    top: 14px; right: 14px;
+    width: 34px; height: 34px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--fg-mute);
+    cursor: pointer;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  }
+  .modal-close:hover { background: #f3f1ea; color: var(--fg); border-color: var(--hairline); }
+  .modal-close svg { width: 16px; height: 16px; }
+
+  /* ───────── footer ───────── */
+  .footer {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    padding: 18px 28px;
+    pointer-events: none;
+    font-size: 11px;
+    color: var(--fg-mute);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .footer .credit { 
+    color: var(--fg-mute);
+    font-size: 9px;
+    letter-spacing: 0.24em;
+  }
+  .footer .product {
+    color: var(--fg-soft);
+    letter-spacing: 0.18em;
+  }
+  .footer .product b {
+    color: var(--gold-deep);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 13px;
+  }
+  .footer .product .sep {
+    margin: 0 10px; opacity: 0.5;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+
+    <header class="brand">
+      <div class="mark">
+        <span class="glyph" aria-label="Zegel van de Profeet ﷺ">
+          <span class="seal" role="img"></span>
+        </span>
+        <span>Ied Kaart</span>
+        <span class="sep"></span>
+        <span class="nm">Generator</span>
+      </div>
+      <div class="header-meta">
+        <span class="live"></span>
+        <span>1444 / 2026</span>
+      </div>
+    </header>
+
+    <div class="hero-block">
+      <div class="eyebrow">Een persoonlijke groet</div>
+      <h1 class="hero">Maak je eigen <em>Ied</em> kaartje.</h1>
+    </div>
+
+    <div class="grid">
+
+      <!-- preview -->
+      <div>
+        <div class="preview-shell">
+          <div class="preview-wrap" id="preview">
+            <img class="tpl" id="tplImg" src="template_aqsa.png" alt="Ied Mubarak template" data-current="aqsa" />
+            <div class="name-overlay latin" id="nameEl">Jouw naam</div>
+          </div>
+          <span class="crosshair tl"></span>
+          <span class="crosshair tr"></span>
+          <span class="crosshair bl"></span>
+          <span class="crosshair br"></span>
+        </div>
+
+        <!-- quote slideshow -->
+        <section class="quotes" aria-label="Inspirerende citaten">
+          <span class="quote-mark" aria-hidden="true">“</span>
+          <div class="quote-stack" id="quoteStack">
+            <article class="quote is-active">
+              <p class="quote-ar" lang="ar">مَا عَمِلَ ابْنُ آدَمَ يَوْمَ النَّحْرِ عَمَلاً أَحَبَّ إِلَى اللَّهِ عَزَّ وَجَلَّ مِنْ هِرَاقَةِ دَمٍ</p>
+              <p class="quote-nl">“De zoon van Adam verricht op de dag van het Offerfeest geen daad die geliefder is bij Allah ﷺ dan het vergieten van bloed (het slachten van het offerdier).”</p>
+              <p class="quote-source">Sunan Ibn Mājah · 3126</p>
+            </article>
+            <article class="quote">
+              <p class="quote-ar" lang="ar">لَيْسَ الْعِيدُ لِمَنْ لَبِسَ الْجَدِيدَ، وَلَكِنَّ الْعِيدَ لِمَنْ صَدَعَ بِالتَّوْحِيدِ</p>
+              <p class="quote-nl">“Ied is niet voor degene die nieuwe kleding draagt, maar Ied is voor degene die at-Tawḥīd openlijk verkondigt.”</p>
+            </article>
+          </div>
+          <div class="quote-dots" id="quoteDots" role="tablist" aria-label="Citaat selecteren"></div>
+        </section>
+      </div>
+
+      <!-- controls -->
+      <aside class="panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Vul in <em>&amp;</em> download</h2>
+        </div>
+
+        <label class="field">
+          <span class="lbl">Kies een template</span>
+          <div class="tpl-picker" id="tplPicker">
+            <label class="tpl-opt is-selected" data-tpl="aqsa">
+              <input type="radio" name="tpl" value="aqsa" checked />
+              <img src="template_aqsa.png" alt="Al-Aqsa" />
+              <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </label>
+            <label class="tpl-opt" data-tpl="kaaba">
+              <input type="radio" name="tpl" value="kaaba" />
+              <img src="template_kaaba.png" alt="Kaaba" />
+              <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
+            </label>
+          </div>
+        </label>
+
+        <label class="field">
+          <span class="lbl">Naam</span>
+          <div class="input-wrap">
+            <input type="text" class="name" id="nameInput" placeholder="Bijv. Dumfries IT" autocomplete="off" data-comment-anchor="ed65c678a7-input" />
+          </div>
+        </label>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="downloadBtn" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+            Download kaartje
+          </button>
+          <button class="btn btn-ghost" id="copyBtn" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span id="copyLabel">Kopieer begeleidende tekst</span>
+          </button>
+        </div>
+
+        <div class="txt-section">
+          <div class="txt-card" id="txtPreview"></div>
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <span class="credit">KKSK &amp; CCJDN</span>
+    <span class="product">Een product van <b>DumfriesIT</b></span>
+  </footer>
+
+  <canvas class="export" id="exportCanvas" width="3600" height="3600"></canvas>
+
+  <!-- success modal -->
+  <div class="modal-root" id="successModal" role="dialog" aria-modal="true" aria-labelledby="successTitle">
+    <div class="modal-veil" data-close></div>
+    <div class="modal">
+      <button class="modal-close" type="button" data-close aria-label="Sluiten">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+      </div>
+      <div class="modal-eyebrow">Download begonnen</div>
+      <h3 class="modal-title" id="successTitle">Je kaartje is onderweg.</h3>
+      <p class="modal-sub">Check je downloads voor <b id="successFileName">het bestand</b>. Kopieer hieronder de begeleidende tekst om mee te sturen — je naam wordt automatisch dikgedrukt in WhatsApp.</p>
+
+      <div class="modal-txt" id="modalTxt"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="modalCopyBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span id="modalCopyLabel">Kopieer tekst</span>
+        </button>
+        <button class="btn btn-primary" id="newCardBtn" type="button">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3.5-7.1"/><polyline points="21 3 21 9 15 9"/></svg>
+          Maak nog een kaart
+        </button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const input = document.getElementById('nameInput');
+  const nameEl = document.getElementById('nameEl');
+  const txtPreview = document.getElementById('txtPreview');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const copyLabel = document.getElementById('copyLabel');
+  const tplImg = document.getElementById('tplImg');
+  const exportCanvas = document.getElementById('exportCanvas');
+
+  const NAME_COLOR = '#34414f';
+  const TEMPLATES = {
+    aqsa:  { src: 'template_aqsa.png',  nameColor: '#34414f' },
+    kaaba: { src: 'template_kaaba.png', nameColor: '#2a2a2a' },
+  };
+  let currentTpl = 'aqsa';
+  // hidden preloaded images for export
+  const exportImgs = {};
+  for (const [k, t] of Object.entries(TEMPLATES)) {
+    const im = new Image();
+    im.src = t.src;
+    exportImgs[k] = im;
+  }
+  const ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
+
+  function isArabic(s) { return ARABIC_RE.test(s); }
+
+  function renderPreview() {
+    const raw = input.value.trim();
+    const name = raw || 'Jouw naam';
+    const arabic = isArabic(name);
+    nameEl.textContent = name;
+    nameEl.classList.toggle('arabic', arabic);
+    nameEl.classList.toggle('latin', !arabic);
+    nameEl.style.opacity = raw ? '1' : '0.35';
+    renderTxt(raw);
+  }
+
+  function renderTxt(raw) {
+    const name = raw || 'Naam';
+    txtPreview.innerHTML = '';
+    const line1 = document.createElement('span');
+    line1.textContent = 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!';
+    const ar = document.createElement('span');
+    ar.className = 'ar';
+    ar.textContent = 'تقبل الله منا ومنكم صالح الأعمال';
+    const nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = name;
+    txtPreview.appendChild(line1);
+    txtPreview.appendChild(ar);
+    txtPreview.appendChild(nm);
+  }
+
+  function buildText(raw) {
+    return 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!\n' +
+      'تقبل الله منا ومنكم صالح الأعمال\n\n' +
+      '*' + raw + '*';
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(() => true).catch(() => fallbackCopy(text));
+    }
+    return Promise.resolve(fallbackCopy(text));
+  }
+  function fallbackCopy(text) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '0';
+      ta.style.left = '0';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+  function flashCopied(btn, labelEl, normalText) {
+    btn.classList.add('copied');
+    labelEl.textContent = 'Gekopieerd ✓';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      labelEl.textContent = normalText;
+    }, 1800);
+  }
+
+  function copyText() {
+    const raw = input.value.trim() || 'Naam';
+    copyToClipboard(buildText(raw)).then(ok => {
+      if (ok) flashCopied(copyBtn, copyLabel, 'Kopieer begeleidende tekst');
+      else alert('Kopiëren is niet gelukt. Markeer de tekst handmatig en kopieer met Ctrl/Cmd + C.');
+    });
+  }
+
+  async function ensureFontsReady() {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+      try {
+        await Promise.all([
+          document.fonts.load('700 132px Raleway'),
+          document.fonts.load('600 166px Mirza'),
+        ]);
+      } catch (e) {}
+    }
+  }
+
+  async function ensureImgLoaded(img) {
+    if (img.complete && img.naturalWidth > 0) return;
+    await new Promise((res, rej) => {
+      img.addEventListener('load', res, { once: true });
+      img.addEventListener('error', rej, { once: true });
+    });
+  }
+
+  async function downloadPng() {
+    const raw = input.value.trim();
+    if (!raw) {
+      input.focus();
+      input.style.borderColor = '#b53d2c';
+      setTimeout(() => { input.style.borderColor = ''; }, 1200);
+      return;
+    }
+    downloadBtn.disabled = true;
+    const origLabel = downloadBtn.innerHTML;
+    downloadBtn.innerHTML = 'Bezig…';
+
+    try {
+      await ensureImgLoaded(exportImgs[currentTpl]);
+      await ensureFontsReady();
+
+      const W = 3600, H = 3600;
+      exportCanvas.width = W; exportCanvas.height = H;
+      const ctx = exportCanvas.getContext('2d');
+      ctx.clearRect(0, 0, W, H);
+      ctx.drawImage(exportImgs[currentTpl], 0, 0, W, H);
+
+      const arabic = isArabic(raw);
+      ctx.fillStyle = TEMPLATES[currentTpl].nameColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      let fontSize;
+      if (arabic) {
+        fontSize = Math.round(H * 0.056);
+        ctx.font = '600 ' + fontSize + 'px "Mirza", serif';
+        ctx.direction = 'rtl';
+      } else {
+        fontSize = Math.round(H * 0.044);
+        ctx.font = '700 ' + fontSize + 'px "Raleway", sans-serif';
+        ctx.direction = 'ltr';
+      }
+
+      const maxWidth = W * 0.86;
+      let measured = ctx.measureText(raw).width;
+      if (measured > maxWidth) {
+        const scale = maxWidth / measured;
+        fontSize = Math.floor(fontSize * scale);
+        ctx.font = (arabic ? '600 ' : '700 ') + fontSize + 'px ' + (arabic ? '"Mirza", serif' : '"Raleway", sans-serif');
+      }
+
+      const x = W / 2;
+      const y = H * 0.895;
+      ctx.fillText(raw, x, y);
+
+      const safe = raw.replace(/[^\p{L}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '_') || 'kaartje';
+      const fileName = 'ied_kaartje_' + safe + '.png';
+      const url = exportCanvas.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      showSuccess(raw, fileName);
+    } catch (e) {
+      console.error(e);
+      alert('Er ging iets mis bij het downloaden.');
+    } finally {
+      downloadBtn.innerHTML = origLabel;
+      downloadBtn.disabled = false;
+    }
+  }
+
+  input.addEventListener('input', renderPreview);
+  downloadBtn.addEventListener('click', downloadPng);
+  copyBtn.addEventListener('click', copyText);
+
+  // ===== success modal =====
+  const successModal = document.getElementById('successModal');
+  const successFileName = document.getElementById('successFileName');
+  const modalTxt = document.getElementById('modalTxt');
+  const modalCopyBtn = document.getElementById('modalCopyBtn');
+  const modalCopyLabel = document.getElementById('modalCopyLabel');
+  const newCardBtn = document.getElementById('newCardBtn');
+
+  function fillModalTxt(raw) {
+    modalTxt.innerHTML = '';
+    const a = document.createElement('span');
+    a.textContent = 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!';
+    const b = document.createElement('span');
+    b.className = 'ar';
+    b.textContent = 'تقبل الله منا ومنكم صالح الأعمال';
+    const c = document.createElement('span');
+    c.className = 'nm';
+    c.textContent = raw;
+    modalTxt.appendChild(a);
+    modalTxt.appendChild(b);
+    modalTxt.appendChild(c);
+  }
+  function showSuccess(raw, fileName) {
+    successFileName.textContent = fileName;
+    fillModalTxt(raw);
+    successModal.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeSuccess() {
+    successModal.classList.remove('is-open');
+    document.body.style.overflow = '';
+  }
+  function resetAll() {
+    closeSuccess();
+    input.value = '';
+    renderPreview();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => input.focus(), 220);
+  }
+  successModal.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeSuccess));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && successModal.classList.contains('is-open')) closeSuccess();
+  });
+  modalCopyBtn.addEventListener('click', () => {
+    const raw = input.value.trim() || 'Naam';
+    copyToClipboard(buildText(raw)).then(ok => {
+      if (ok) flashCopied(modalCopyBtn, modalCopyLabel, 'Kopieer tekst');
+      else alert('Kopiëren is niet gelukt. Markeer de tekst handmatig en kopieer met Ctrl/Cmd + C.');
+    });
+  });
+  newCardBtn.addEventListener('click', resetAll);
+
+  // ===== quote rotator =====
+  const quoteSlides = document.querySelectorAll('#quoteStack > .quote');
+  const quoteDots = document.getElementById('quoteDots');
+  let quoteIdx = 0;
+  let quoteTimer = null;
+  const QUOTE_INTERVAL = 10000;
+
+  quoteSlides.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'quote-dot' + (i === 0 ? ' is-active' : '');
+    b.setAttribute('role', 'tab');
+    b.setAttribute('aria-label', 'Citaat ' + (i + 1));
+    b.addEventListener('click', () => { showQuote(i); restartTimer(); });
+    quoteDots.appendChild(b);
+  });
+
+  function showQuote(i) {
+    quoteIdx = (i + quoteSlides.length) % quoteSlides.length;
+    quoteSlides.forEach((el, k) => el.classList.toggle('is-active', k === quoteIdx));
+    quoteDots.querySelectorAll('.quote-dot').forEach((el, k) => el.classList.toggle('is-active', k === quoteIdx));
+  }
+  function restartTimer() {
+    if (quoteTimer) clearInterval(quoteTimer);
+    quoteTimer = setInterval(() => showQuote(quoteIdx + 1), QUOTE_INTERVAL);
+  }
+  restartTimer();
+
+  // template picker
+  document.querySelectorAll('.tpl-opt').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const tpl = opt.dataset.tpl;
+      if (!TEMPLATES[tpl] || tpl === currentTpl) return;
+      currentTpl = tpl;
+      document.querySelectorAll('.tpl-opt').forEach(o => o.classList.toggle('is-selected', o === opt));
+      tplImg.src = TEMPLATES[tpl].src;
+      tplImg.dataset.current = tpl;
+      nameEl.style.color = TEMPLATES[tpl].nameColor;
+    });
+  });
+  // set initial color
+  nameEl.style.color = TEMPLATES[currentTpl].nameColor;
+
+  renderPreview();
+})();
+</script>
+</body>
+</html>
