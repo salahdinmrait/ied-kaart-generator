@@ -421,6 +421,34 @@
     color: var(--fg-mute);
   }
 
+  /* language toggle */
+  .lang-toggle {
+    display: inline-flex;
+    border-radius: 10px;
+    border: 1px solid var(--hairline-strong);
+    overflow: hidden;
+    background: rgba(255,255,255,0.4);
+  }
+  .lang-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-mute);
+    cursor: pointer;
+    transition: background 180ms ease, color 180ms ease;
+  }
+  .lang-btn.is-active {
+    background: linear-gradient(135deg, var(--gold-soft), var(--gold));
+    color: #fff;
+  }
+  .lang-btn:not(.is-active):hover { background: rgba(255,255,255,0.6); color: var(--fg); }
+
   /* template picker */
   .tpl-picker {
     display: grid;
@@ -806,7 +834,11 @@
       <!-- controls -->
       <aside class="panel">
         <div class="panel-header">
-          <h2 class="panel-title">Vul in <em>&amp;</em> download</h2>
+          <h2 class="panel-title" id="panelTitle">Vul in <em>&amp;</em> download</h2>
+          <div class="lang-toggle" role="group" aria-label="Taal / Language">
+            <button class="lang-btn is-active" id="langNl" type="button">NL</button>
+            <button class="lang-btn" id="langEn" type="button">EN</button>
+          </div>
         </div>
 
         <label class="field">
@@ -900,16 +932,26 @@
 
   const NAME_COLOR = '#34414f';
   const TEMPLATES = {
-    aqsa:  { src: 'template_aqsa.png',  nameColor: '#34414f' },
-    kaaba: { src: 'template_kaaba.png', nameColor: '#2a2a2a' },
+    nl: {
+      aqsa:  { src: 'template_aqsa.png',    nameColor: '#34414f' },
+      kaaba: { src: 'template_kaaba.png',   nameColor: '#2a2a2a' },
+    },
+    en: {
+      aqsa:  { src: 'template_aqsa_en.jpeg', nameColor: '#34414f' },
+      kaaba: { src: 'template_kaaba.png',   nameColor: '#2a2a2a' },
+    },
   };
+  let currentLang = 'nl';
   let currentTpl = 'aqsa';
   // hidden preloaded images for export
   const exportImgs = {};
-  for (const [k, t] of Object.entries(TEMPLATES)) {
-    const im = new Image();
-    im.src = t.src;
-    exportImgs[k] = im;
+  for (const lang of ['nl', 'en']) {
+    exportImgs[lang] = {};
+    for (const [k, t] of Object.entries(TEMPLATES[lang])) {
+      const im = new Image();
+      im.src = t.src;
+      exportImgs[lang][k] = im;
+    }
   }
   const ARABIC_RE = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/;
 
@@ -926,14 +968,29 @@
     renderTxt(raw);
   }
 
+  const LANG_STRINGS = {
+    nl: {
+      line1: 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!',
+      namePlaceholder: 'Bijv. Dumfries IT',
+      nameLabel: 'Naam',
+    },
+    en: {
+      line1: 'ʿIed Mubarak, may Allah accept our and your good deeds!',
+      namePlaceholder: 'E.g. Dumfries IT',
+      nameLabel: 'Name',
+    },
+  };
+  const ARABIC_LINE = 'تقبل الله منا ومنكم صالح الأعمال';
+
   function renderTxt(raw) {
-    const name = raw || 'Naam';
+    const s = LANG_STRINGS[currentLang];
+    const name = raw || s.nameLabel;
     txtPreview.innerHTML = '';
     const line1 = document.createElement('span');
-    line1.textContent = 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!';
+    line1.textContent = s.line1;
     const ar = document.createElement('span');
     ar.className = 'ar';
-    ar.textContent = 'تقبل الله منا ومنكم صالح الأعمال';
+    ar.textContent = ARABIC_LINE;
     const nm = document.createElement('span');
     nm.className = 'nm';
     nm.textContent = name;
@@ -943,9 +1000,8 @@
   }
 
   function buildText(raw) {
-    return 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!\n' +
-      'تقبل الله منا ومنكم صالح الأعمال\n\n' +
-      '*' + raw + '*';
+    const s = LANG_STRINGS[currentLang];
+    return s.line1 + '\n' + ARABIC_LINE + '\n\n*' + raw + '*';
   }
 
   function copyToClipboard(text) {
@@ -1021,17 +1077,17 @@
     downloadBtn.innerHTML = 'Bezig…';
 
     try {
-      await ensureImgLoaded(exportImgs[currentTpl]);
+      await ensureImgLoaded(exportImgs[currentLang][currentTpl]);
       await ensureFontsReady();
 
       const W = 3600, H = 3600;
       exportCanvas.width = W; exportCanvas.height = H;
       const ctx = exportCanvas.getContext('2d');
       ctx.clearRect(0, 0, W, H);
-      ctx.drawImage(exportImgs[currentTpl], 0, 0, W, H);
+      ctx.drawImage(exportImgs[currentLang][currentTpl], 0, 0, W, H);
 
       const arabic = isArabic(raw);
-      ctx.fillStyle = TEMPLATES[currentTpl].nameColor;
+      ctx.fillStyle = TEMPLATES[currentLang][currentTpl].nameColor;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -1093,10 +1149,10 @@
   function fillModalTxt(raw) {
     modalTxt.innerHTML = '';
     const a = document.createElement('span');
-    a.textContent = 'ʿIed Mubarak, moge Allah onze en jullie goede daden accepteren!';
+    a.textContent = LANG_STRINGS[currentLang].line1;
     const b = document.createElement('span');
     b.className = 'ar';
-    b.textContent = 'تقبل الله منا ومنكم صالح الأعمال';
+    b.textContent = ARABIC_LINE;
     const c = document.createElement('span');
     c.className = 'nm';
     c.textContent = raw;
@@ -1166,16 +1222,37 @@
   document.querySelectorAll('.tpl-opt').forEach(opt => {
     opt.addEventListener('click', () => {
       const tpl = opt.dataset.tpl;
-      if (!TEMPLATES[tpl] || tpl === currentTpl) return;
+      if (!TEMPLATES[currentLang][tpl] || tpl === currentTpl) return;
       currentTpl = tpl;
       document.querySelectorAll('.tpl-opt').forEach(o => o.classList.toggle('is-selected', o === opt));
-      tplImg.src = TEMPLATES[tpl].src;
+      tplImg.src = TEMPLATES[currentLang][tpl].src;
       tplImg.dataset.current = tpl;
-      nameEl.style.color = TEMPLATES[tpl].nameColor;
+      nameEl.style.color = TEMPLATES[currentLang][tpl].nameColor;
     });
   });
   // set initial color
-  nameEl.style.color = TEMPLATES[currentTpl].nameColor;
+  nameEl.style.color = TEMPLATES[currentLang][currentTpl].nameColor;
+
+  // language toggle
+  function switchLang(lang) {
+    if (lang === currentLang) return;
+    currentLang = lang;
+    document.getElementById('langNl').classList.toggle('is-active', lang === 'nl');
+    document.getElementById('langEn').classList.toggle('is-active', lang === 'en');
+    // update template picker thumbnails
+    document.querySelectorAll('.tpl-opt').forEach(opt => {
+      const tpl = opt.dataset.tpl;
+      opt.querySelector('img').src = TEMPLATES[lang][tpl].src;
+    });
+    // update preview image
+    tplImg.src = TEMPLATES[lang][currentTpl].src;
+    nameEl.style.color = TEMPLATES[lang][currentTpl].nameColor;
+    // update input placeholder
+    input.placeholder = LANG_STRINGS[lang].namePlaceholder;
+    renderPreview();
+  }
+  document.getElementById('langNl').addEventListener('click', () => switchLang('nl'));
+  document.getElementById('langEn').addEventListener('click', () => switchLang('en'));
 
   renderPreview();
 })();
