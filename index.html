@@ -190,6 +190,8 @@
   }
   @media (max-width: 920px) {
     .grid { grid-template-columns: 1fr; gap: 40px; }
+    .grid > div { order: 2; }
+    .grid > .panel { order: 1; position: static; }
   }
 
   /* ───────── preview card (floating glass frame) ───────── */
